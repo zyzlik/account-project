@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block content %}
+	<div class="row text-center">
+		<h1>Быстрый перевод</h1>
+		<form action="" method="POST">
+			{% csrf_token %}
+			{% for field in form %}
+			    <div class="columns large-3">
+			        {{ field.label_tag }} {{ field }}
+			        {% for error in field.errors %}
+			        	<p class="error">{{ error }}</p>
+			        {% endfor %}
+			    </div>
+			{% endfor %}
+			    <div class="columns large-3">
+			    	<br>
+					<input type="submit" class="button expanded" value="Отправить">
+				</div>
+		</form>
+	</div>
+	<div class="row info"></div>
+{% endblock content %}
+{% block body_script %}
+		{{ block.super }}
+		<script src="{% static 'js/getCookie.js' %}"></script>
+		<script>
+		$('form').submit(function(event) {
+			event.preventDefault();
+			var form = $(document).find('input,textarea,select');
+			$('div.info').empty();
+			form.removeClass('error');
+			$.post(
+				'{% url "money_transfer" %}',
+				form.serialize(),
+				function(data) {
+					if(data != 'ok') {
+						var errors = $.parseJSON(data);
+                    	for (var i = 0; i < errors.length; i++) {
+                        	var input = $(document).find(errors[i].key);
+                        	input.addClass('error');
+                        	$('div.info').append('<p class=error></p>');
+                        	$('p.error:first').text((errors[i].desc));
+                        }
+                    }
+                    else {
+                    	$('form').trigger('reset');
+                    	$('div.info').append('<p class="callout success text-center">Успешно</p>');
+                    	$('p.callout').hide(5000);
+                    }
+				}
+			);
+		})
+		</script>
+{% endblock body_script %}
